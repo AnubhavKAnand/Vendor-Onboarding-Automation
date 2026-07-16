@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# requirements.txt
+# Python dependencies for the Vendor Routing RL Agent (Phase 3)
+# Target runtime: Python 3.11+ on SAP BTP Cloud Foundry (Python Buildpack)
+#
+# CF deployment notes:
+#   - PyTorch CPU build is used to stay within CF memory limits (768 MB min).
+#   - To force CPU-only installation locally:
+#       pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+#   - For GPU-enabled BTP Kyma/K8s, swap torch==2.3.0 → torch==2.3.0+cu121
+#
+# Install:
+#   pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Web framework ─────────────────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.30.0       # ASGI server; [standard] includes uvloop + httptools
+
+# ── Data validation ───────────────────────────────────────────────────────────
+pydantic==2.7.1                 # FastAPI schema validation (v2 required by fastapi 0.111)
+python-multipart==0.0.9         # Required by FastAPI for form data support
+
+# ── Deep learning ─────────────────────────────────────────────────────────────
+torch==2.3.0                    # PyTorch (CPU); see CF note above
+numpy==1.26.4                   # Numeric ops; pinned for torch 2.3 ABI compatibility
+
+# ── Data processing ───────────────────────────────────────────────────────────
+pandas==2.2.2                   # DataFrame operations in train.py
+
+# ── SAP HANA connector (production data fetch in train.py) ───────────────────
+hdbcli==2.20.23                 # SAP HANA Client for Python
+                                # Requires HANA_HOST, HANA_PORT, HANA_USER, HANA_PASSWORD env vars
+
+# ── HTTP client (integration tests + health checks) ───────────────────────────
+httpx==0.27.0                   # Async HTTP client for test harness
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1            # Load .env files for local development

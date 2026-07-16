@@ -1,0 +1,20 @@
+COLUMN TABLE VendorOnboardingService_VendorDocuments_drafts (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP NULL,
+  createdBy NVARCHAR(255) NULL,
+  modifiedAt TIMESTAMP NULL,
+  modifiedBy NVARCHAR(255) NULL,
+  Vendor_ID NVARCHAR(36) NULL,
+  DocumentType NVARCHAR(20) NULL,
+  URL NVARCHAR(500) NULL,
+  UploadDate DATE NULL,
+  AI_Confidence_Score DECIMAL(5, 4) NULL,
+  IsActiveEntity BOOLEAN,
+  HasActiveEntity BOOLEAN,
+  HasDraftEntity BOOLEAN,
+  DraftAdministrativeData_DraftUUID NVARCHAR(36) NOT NULL,
+  PRIMARY KEY(ID)
+) WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors_drafts AS Vendor ON (Vendor.ID = Vendor_ID),
+  MANY TO ONE JOIN VendorOnboardingService_DraftAdministrativeData AS DraftAdministrativeData ON (DraftAdministrativeData.DraftUUID = DraftAdministrativeData_DraftUUID)
+)

@@ -1,0 +1,20 @@
+COLUMN TABLE vendorportal_Vendor (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP,
+  modifiedBy NVARCHAR(255),
+  CompanyName NVARCHAR(200) NOT NULL,
+  TaxID NVARCHAR(50),
+  Industry NVARCHAR(100),
+  Country NVARCHAR(3),
+  RiskScore DECIMAL(5, 2),
+  Status NVARCHAR(20) DEFAULT 'Draft',
+  PRIMARY KEY(ID)
+) WITH ASSOCIATIONS (
+  MANY TO MANY JOIN vendorportal_VendorDocument AS Documents ON (Documents.Vendor_ID = ID),
+  MANY TO MANY JOIN vendorportal_BankAccount AS BankAccounts ON (BankAccounts.Vendor_ID = ID),
+  MANY TO MANY JOIN vendorportal_ApprovalReview AS ApprovalReviews ON (ApprovalReviews.Vendor_ID = ID),
+  MANY TO ONE JOIN vendorportal_AgentExtractionLog AS ExtractionLog ON (ExtractionLog.Vendor_ID = ID),
+  MANY TO ONE JOIN vendorportal_RLTrainingBatch AS RLBatch ON (RLBatch.Vendor_ID = ID)
+)

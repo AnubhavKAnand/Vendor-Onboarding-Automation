@@ -1,0 +1,21 @@
+COLUMN TABLE VendorOnboardingService_BankAccounts_drafts (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP NULL,
+  createdBy NVARCHAR(255) NULL,
+  modifiedAt TIMESTAMP NULL,
+  modifiedBy NVARCHAR(255) NULL,
+  Vendor_ID NVARCHAR(36) NULL,
+  AccountName NVARCHAR(200) NULL,
+  AccountNumber NVARCHAR(50) NULL,
+  RoutingNumber NVARCHAR(20) NULL,
+  SwiftCode NVARCHAR(20) NULL,
+  IsVerified BOOLEAN NULL DEFAULT FALSE,
+  IsActiveEntity BOOLEAN,
+  HasActiveEntity BOOLEAN,
+  HasDraftEntity BOOLEAN,
+  DraftAdministrativeData_DraftUUID NVARCHAR(36) NOT NULL,
+  PRIMARY KEY(ID)
+) WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors_drafts AS Vendor ON (Vendor.ID = Vendor_ID),
+  MANY TO ONE JOIN VendorOnboardingService_DraftAdministrativeData AS DraftAdministrativeData ON (DraftAdministrativeData.DraftUUID = DraftAdministrativeData_DraftUUID)
+)

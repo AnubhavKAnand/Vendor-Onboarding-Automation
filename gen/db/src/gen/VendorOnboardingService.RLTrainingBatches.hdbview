@@ -1,0 +1,15 @@
+VIEW VendorOnboardingService_RLTrainingBatches AS SELECT
+  RLTrainingBatch_0.ID,
+  RLTrainingBatch_0.createdAt,
+  RLTrainingBatch_0.createdBy,
+  RLTrainingBatch_0.modifiedAt,
+  RLTrainingBatch_0.modifiedBy,
+  RLTrainingBatch_0.Vendor_ID,
+  RLTrainingBatch_0.StateVector,
+  RLTrainingBatch_0.PredictedAction,
+  RLTrainingBatch_0.TrueAction,
+  RLTrainingBatch_0.Reward
+FROM vendorportal_RLTrainingBatch AS RLTrainingBatch_0
+WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors AS Vendor ON (Vendor.ID = Vendor_ID)
+)

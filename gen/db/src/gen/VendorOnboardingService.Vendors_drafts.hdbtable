@@ -1,0 +1,25 @@
+COLUMN TABLE VendorOnboardingService_Vendors_drafts (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP NULL,
+  createdBy NVARCHAR(255) NULL,
+  modifiedAt TIMESTAMP NULL,
+  modifiedBy NVARCHAR(255) NULL,
+  CompanyName NVARCHAR(200) NULL,
+  TaxID NVARCHAR(50) NULL,
+  Industry NVARCHAR(100) NULL,
+  Country NVARCHAR(3) NULL,
+  RiskScore DECIMAL(5, 2) NULL,
+  Status NVARCHAR(20) NULL DEFAULT 'Draft',
+  IsActiveEntity BOOLEAN,
+  HasActiveEntity BOOLEAN,
+  HasDraftEntity BOOLEAN,
+  DraftAdministrativeData_DraftUUID NVARCHAR(36) NOT NULL,
+  PRIMARY KEY(ID)
+) WITH ASSOCIATIONS (
+  MANY TO MANY JOIN VendorOnboardingService_VendorDocuments_drafts AS Documents ON (Documents.Vendor_ID = ID),
+  MANY TO MANY JOIN VendorOnboardingService_BankAccounts_drafts AS BankAccounts ON (BankAccounts.Vendor_ID = ID),
+  MANY TO MANY JOIN VendorOnboardingService_ApprovalReviews_drafts AS ApprovalReviews ON (ApprovalReviews.Vendor_ID = ID),
+  MANY TO ONE JOIN VendorOnboardingService_AgentExtractionLogs_drafts AS ExtractionLog ON (ExtractionLog.Vendor_ID = ID),
+  MANY TO ONE JOIN VendorOnboardingService_RLTrainingBatches_drafts AS RLBatch ON (RLBatch.Vendor_ID = ID),
+  MANY TO ONE JOIN VendorOnboardingService_DraftAdministrativeData AS DraftAdministrativeData ON (DraftAdministrativeData.DraftUUID = DraftAdministrativeData_DraftUUID)
+)

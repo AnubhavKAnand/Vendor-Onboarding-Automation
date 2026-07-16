@@ -1,0 +1,247 @@
+{
+  "_version": "1.65.0",
+
+  "sap.app": {
+    "id"         : "vendorportal.vendor.registration",
+    "type"       : "application",
+    "i18n"       : "i18n/i18n.properties",
+    "title"      : "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "applicationVersion": {
+      "version": "4.0.0"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri" : "/api/v1/vendor-onboarding/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "4.0",
+          "localUri"    : "localService/metadata.xml"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "VendorRegistration-manage": {
+          "semanticObject": "VendorRegistration",
+          "action"        : "manage",
+          "title"         : "{{appTitle}}",
+          "signature": {
+            "parameters"  : {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+
+  "sap.ui": {
+    "technology"      : "UI5",
+    "fullWidth"       : true,
+    "supportedThemes" : ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb"],
+    "icons": {
+      "icon"       : "sap-icon://supplier",
+      "favIcon"    : "",
+      "phone"      : "",
+      "phone@2"    : "",
+      "tablet"     : "",
+      "tablet@2"   : ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet" : true,
+      "phone"  : false
+    }
+  },
+
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m"             : {},
+        "sap.ui.core"       : {},
+        "sap.fe.templates"  : {},
+        "sap.f"             : {},
+        "sap.ui.fl"         : {},
+        "sap.ui.layout"     : {},
+        "sap.ui.unified"    : {}
+      }
+    },
+
+    "contentDensities": {
+      "compact"   : true,
+      "cozy"      : true
+    },
+
+    "models": {
+      "": {
+        "dataSource" : "mainService",
+        "preload"    : true,
+        "settings"   : {
+          "operationMode"   : "Server",
+          "autoExpandSelect": true,
+          "earlyRequests"   : true,
+          "groupId"         : "$auto"
+        }
+      },
+      "i18n": {
+        "type"    : "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName"       : "vendorportal.vendor.registration.i18n.i18n",
+          "supportedLocales" : ["en", "de"],
+          "fallbackLocale"   : "en"
+        }
+      }
+    },
+
+    "routing": {
+      "config": {},
+
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name"   : "VendorsList",
+          "target" : "VendorsList"
+        },
+        {
+          "pattern": "Vendors({key}):?query:",
+          "name"   : "VendorObjectPage",
+          "target" : "VendorObjectPage"
+        },
+        {
+          "pattern": "Vendors({key})/Documents({key2}):?query:",
+          "name"   : "VendorDocumentObjectPage",
+          "target" : "VendorDocumentObjectPage"
+        },
+        {
+          "pattern": "Vendors({key})/ApprovalReviews({key2}):?query:",
+          "name"   : "ApprovalReviewObjectPage",
+          "target" : "ApprovalReviewObjectPage"
+        },
+        {
+          "pattern": "RLTrainingBatches({key}):?query:",
+          "name"   : "RLBatchObjectPage",
+          "target" : "RLBatchObjectPage"
+        }
+      ],
+
+      "targets": {
+
+        "VendorsList": {
+          "type" : "Component",
+          "id"   : "VendorsList",
+          "name" : "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "entitySet"        : "Vendors",
+              "variantManagement": "Page",
+              "initialLoad"      : "Enabled",
+              "filterSettings"   : {
+                "hideBasicSearch": false
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type"                 : "ResponsiveTable",
+                    "selectionMode"        : "Multi",
+                    "condensedTableLayout" : false,
+                    "personalization"      : {
+                      "column" : true,
+                      "filter" : true,
+                      "sort"   : true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "VendorObjectPage": {
+          "type" : "Component",
+          "id"   : "VendorObjectPage",
+          "name" : "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet"            : "Vendors",
+              "editableHeaderContent": false,
+              "showAnchorBar"        : true,
+              "showAnchorBarPopover" : true,
+              "columnLayout"         : "TwoColumnsBeginExpanded",
+              "navigation": {
+                "Documents": {
+                  "detail": { "route": "VendorDocumentObjectPage" }
+                },
+                "ApprovalReviews": {
+                  "detail": { "route": "ApprovalReviewObjectPage" }
+                }
+              },
+              "content": {
+                "header": {
+                  "facets": {
+                    "RLAdvisoryHeader": {
+                      "stashed": false
+                    }
+                  }
+                },
+                "body": {
+                  "sections": {
+                    "AIAudit": {
+                      "visible"  : true,
+                      "position" : { "placement": "After", "anchor": "GeneralInfo" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+
+        "VendorDocumentObjectPage": {
+          "type" : "Component",
+          "id"   : "VendorDocumentObjectPage",
+          "name" : "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "VendorDocuments"
+            }
+          }
+        },
+
+        "ApprovalReviewObjectPage": {
+          "type" : "Component",
+          "id"   : "ApprovalReviewObjectPage",
+          "name" : "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet": "ApprovalReviews"
+            }
+          }
+        },
+
+        "RLBatchObjectPage": {
+          "type" : "Component",
+          "id"   : "RLBatchObjectPage",
+          "name" : "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "entitySet"   : "RLTrainingBatches",
+              "editableHeaderContent": false
+            }
+          }
+        }
+      }
+    },
+
+    "resources": {
+      "css": []
+    }
+  },
+
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType"      : "transactional",
+    "abstract"       : false
+  }
+}

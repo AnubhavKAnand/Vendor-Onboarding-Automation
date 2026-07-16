@@ -1,0 +1,15 @@
+VIEW VendorOnboardingService_VendorDocuments AS SELECT
+  VendorDocument_0.ID,
+  VendorDocument_0.createdAt,
+  VendorDocument_0.createdBy,
+  VendorDocument_0.modifiedAt,
+  VendorDocument_0.modifiedBy,
+  VendorDocument_0.Vendor_ID,
+  VendorDocument_0.DocumentType,
+  VendorDocument_0.URL,
+  VendorDocument_0.UploadDate,
+  VendorDocument_0.AI_Confidence_Score
+FROM vendorportal_VendorDocument AS VendorDocument_0
+WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors AS Vendor ON (Vendor.ID = Vendor_ID)
+)

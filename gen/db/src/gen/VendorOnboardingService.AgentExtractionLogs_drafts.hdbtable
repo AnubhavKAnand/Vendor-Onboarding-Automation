@@ -1,0 +1,19 @@
+COLUMN TABLE VendorOnboardingService_AgentExtractionLogs_drafts (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP NULL,
+  createdBy NVARCHAR(255) NULL,
+  modifiedAt TIMESTAMP NULL,
+  modifiedBy NVARCHAR(255) NULL,
+  Vendor_ID NVARCHAR(36) NULL,
+  RawLLMOutput NCLOB NULL,
+  MissingFields NVARCHAR(500) NULL,
+  EmailTriggered BOOLEAN NULL DEFAULT FALSE,
+  IsActiveEntity BOOLEAN,
+  HasActiveEntity BOOLEAN,
+  HasDraftEntity BOOLEAN,
+  DraftAdministrativeData_DraftUUID NVARCHAR(36) NOT NULL,
+  PRIMARY KEY(ID)
+) WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors_drafts AS Vendor ON (Vendor.ID = Vendor_ID),
+  MANY TO ONE JOIN VendorOnboardingService_DraftAdministrativeData AS DraftAdministrativeData ON (DraftAdministrativeData.DraftUUID = DraftAdministrativeData_DraftUUID)
+)

@@ -1,0 +1,15 @@
+COLUMN TABLE vendorportal_VendorDocument (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP,
+  modifiedBy NVARCHAR(255),
+  Vendor_ID NVARCHAR(36) NOT NULL,
+  DocumentType NVARCHAR(20),
+  URL NVARCHAR(500),
+  UploadDate DATE,
+  AI_Confidence_Score DECIMAL(5, 4),
+  PRIMARY KEY(ID)
+) WITH ASSOCIATIONS (
+  MANY TO ONE JOIN vendorportal_Vendor AS Vendor ON (Vendor.ID = Vendor_ID)
+)

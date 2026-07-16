@@ -1,0 +1,3 @@
+ID,CompanyName,TaxID,Industry,Country,RiskScore,Status
+7a1b2c3d-1111-4aaa-8000-000000000001,Acme Supplies Ltd.,US-98765432,Manufacturing,USA,25.50,Draft
+7a1b2c3d-2222-4bbb-8000-000000000002,GlobalTech Solutions GmbH,DE-12345678,Technology,DEU,42.00,Pending

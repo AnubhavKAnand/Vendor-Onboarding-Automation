@@ -1,0 +1,63 @@
+{
+  "name": "vendor-registration-portal",
+  "version": "1.0.0",
+  "description": "Vendor Registration & Approval Portal - Phase 1 Foundation | SAP BTP CAPM / HANA Cloud",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@cap-js/hana": "^1",
+    "@google/generative-ai": "^0.24.1",
+    "@sap/cds": "^8",
+    "clsx": "^2.1.1",
+    "cors": "^2.8.6",
+    "express": "^4",
+    "lucide-react": "^1.24.0",
+    "nodemailer": "^9.0.3",
+    "pdf-parse": "^1.1.1",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@cap-js/sqlite": "^1",
+    "@sap/cds-dk": "^8",
+    "autoprefixer": "^10.5.2",
+    "postcss": "^8.5.16",
+    "tailwindcss": "^4.3.2"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch",
+    "build": "cds build --production",
+    "deploy:hana": "cds deploy --to hana",
+    "test": "jest --passWithNoTests"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "[production]": {
+          "kind": "hana"
+        }
+      }
+    },
+    "features": {
+      "odata_new_parser": true
+    },
+    "log": {
+      "service": true
+    },
+    "build": {
+      "target": "gen",
+      "tasks": [
+        {
+          "for": "hana"
+        },
+        {
+          "for": "nodejs"
+        }
+      ]
+    }
+  }
+}

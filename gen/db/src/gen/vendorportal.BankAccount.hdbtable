@@ -1,0 +1,16 @@
+COLUMN TABLE vendorportal_BankAccount (
+  ID NVARCHAR(36) NOT NULL,
+  createdAt TIMESTAMP,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP,
+  modifiedBy NVARCHAR(255),
+  Vendor_ID NVARCHAR(36) NOT NULL,
+  AccountName NVARCHAR(200),
+  AccountNumber NVARCHAR(50),
+  RoutingNumber NVARCHAR(20),
+  SwiftCode NVARCHAR(20),
+  IsVerified BOOLEAN DEFAULT FALSE,
+  PRIMARY KEY(ID)
+) WITH ASSOCIATIONS (
+  MANY TO ONE JOIN vendorportal_Vendor AS Vendor ON (Vendor.ID = Vendor_ID)
+)

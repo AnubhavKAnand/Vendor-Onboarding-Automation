@@ -1,0 +1,3 @@
+ID,Vendor_ID,DocumentType,URL,UploadDate,AI_Confidence_Score
+8b2c3d4e-1111-4aaa-9000-000000000001,7a1b2c3d-1111-4aaa-8000-000000000001,Tax,https://storage.example.com/docs/acme-tax-cert-2025.pdf,2025-01-15,0.9750
+8b2c3d4e-2222-4bbb-9000-000000000002,7a1b2c3d-2222-4bbb-8000-000000000002,Registration,https://storage.example.com/docs/globaltech-reg-2025.pdf,2025-02-10,0.8820

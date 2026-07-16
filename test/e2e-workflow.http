@@ -1,0 +1,267 @@
+###############################################################################
+#  test/e2e-workflow.http
+#  VS Code REST Client — End-to-End Backend Workflow Test Suite
+#  Extension : REST Client (humao.rest-client)
+#
+#  Tests the complete Phase 1–3 pipeline without requiring the Fiori UI:
+#    Step 1  POST  Create Vendor                  → Status = Draft
+#    Step 2  POST  Upload VendorDocument           → triggers AI pipeline
+#    Step 3  GET   Verify Vendor enrichment        → Status = Pending, RL prediction set
+#    Step 4  POST  submitFinalDecision             → human labels TrueAction
+#    Step 5  GET   Verify RLTrainingBatch          → Reward calculated (+1 or -1)
+#
+#  Usage:
+#    1. Run `cds watch` in the project root (starts CAPM server on :4004)
+#    2. Ensure RL microservice runs on :8000 (or set RL_SERVICE_URL mock)
+#    3. Open this file in VS Code with REST Client installed
+#    4. Click "Send Request" above each ### block in sequence
+#    5. Response variables are captured automatically for downstream steps
+###############################################################################
+
+# ── Global variables ──────────────────────────────────────────────────────────
+@baseUrl       = http://localhost:4004
+@serviceUrl    = {{baseUrl}}/api/v1/vendor-onboarding
+@contentType   = application/json
+@odataVersion  = 4.0
+
+###############################################################################
+#  STEP 1 — Create a new Vendor
+#  Expected: HTTP 201
+#  Asserts:  response body contains Status = "Draft"
+#            Phase 1 before('CREATE') guard forces this regardless of payload
+###############################################################################
+
+# @name createVendor
+POST {{serviceUrl}}/Vendors
+Content-Type: {{contentType}}
+
+{
+    "CompanyName": "E2E Integration Corp GmbH",
+    "TaxID"      : "DE-987654321",
+    "Industry"   : "Technology",
+    "Country"    : "DEU"
+}
+
+###############################################################################
+#  Capture Vendor ID from Step 1 response for all downstream requests
+#  The REST Client captures JSON path expressions automatically.
+###############################################################################
+
+@vendorId = {{createVendor.response.body.$.ID}}
+
+###############################################################################
+#  STEP 1b — Verify Draft enforcement (inject non-Draft status in payload)
+#  Expected: HTTP 201, Status = "Draft"  (not "Pending" as requested)
+#  Asserts:  the before('CREATE') guard in vendor-service.js overrides the input
+###############################################################################
+
+# @name verifyDraftGuard
+POST {{serviceUrl}}/Vendors
+Content-Type: {{contentType}}
+
+{
+    "CompanyName": "Guard Test Vendor",
+    "TaxID"      : "US-11111111",
+    "Industry"   : "Finance",
+    "Country"    : "USA",
+    "Status"     : "Pending"
+}
+
+###############################################################################
+#  STEP 2 — Upload a VendorDocument for the Vendor created in Step 1
+#
+#  What this triggers in the background (asynchronous via setImmediate):
+#    [1] fileSecurity.js  — validate extension, MIME, malware scan
+#    [2] agenticAI.js     — LLM extraction → structured JSON + confidence
+#    [3] notification.js  — email if confidence < 0.85 or critical fields missing
+#    [4] enrichment.js    — KYC + Sanctions checks in parallel
+#    [5] _assembleStateVector() → flat JSON
+#    [6] HANA writes: AgentExtractionLog, RLTrainingBatch, BankAccount, Vendor.Status = Pending
+#    [7] rl-integration.js → POST http://localhost:8000/predict → PredictedAction stored
+#
+#  Expected: HTTP 201 (immediate)
+#  Then wait ~2 seconds for the background pipeline to complete before Step 3.
+###############################################################################
+
+# @name uploadDocument
+POST {{serviceUrl}}/VendorDocuments
+Content-Type: {{contentType}}
+
+{
+    "Vendor_ID"   : "{{vendorId}}",
+    "DocumentType": "Tax",
+    "URL"         : "https://storage.example.com/docs/e2e-tax-cert-2025.pdf",
+    "UploadDate"  : "2025-06-01"
+}
+
+@documentId = {{uploadDocument.response.body.$.ID}}
+
+###############################################################################
+#  STEP 2b — Upload a Bank document for the same Vendor
+#  This tests DocumentType = Bank → triggers extraction of AccountNumber / SWIFT
+###############################################################################
+
+# @name uploadBankDocument
+POST {{serviceUrl}}/VendorDocuments
+Content-Type: {{contentType}}
+
+{
+    "Vendor_ID"   : "{{vendorId}}",
+    "DocumentType": "Bank",
+    "URL"         : "https://storage.example.com/docs/e2e-bank-statement-2025.pdf",
+    "UploadDate"  : "2025-06-01"
+}
+
+###############################################################################
+#  ⏳  PAUSE ~2 seconds here (open a terminal and press Ctrl+C to re-run watch)
+#  The AI pipeline runs in setImmediate() so it completes shortly after Step 2.
+#  In CI: add a sleep 2 between curl calls, or use test/integration.test.js.
+###############################################################################
+
+###############################################################################
+#  STEP 3 — GET the Vendor with all compositions expanded
+#
+#  Expected:  Status = "Pending"       (pipeline completed successfully)
+#             RLBatch.PredictedAction  (set by rl-integration.js)
+#             RLBatch.StateVector      (assembled by Phase 2)
+#             ExtractionLog.MissingFields  (LLM result)
+#             BankAccounts             (populated from Bank document)
+#
+#  If Status is still "Draft", the pipeline failed or the LLM returned missing
+#  critical fields (TaxID or AccountNumber). Check `cds watch` console logs.
+###############################################################################
+
+# @name getVendor
+GET {{serviceUrl}}/Vendors/{{vendorId}}?$expand=RLBatch,ExtractionLog,BankAccounts,Documents,ApprovalReviews
+Accept: {{contentType}}
+
+###############################################################################
+#  STEP 3b — GET the RLTrainingBatch directly (pre-reward, Reward = 0)
+#
+#  Expected:
+#    PredictedAction : "Route-Compliance" (or whichever the RL model returned)
+#    TrueAction      : ""                 (not yet set — human hasn't decided)
+#    Reward          : 0                  (not yet calculated)
+###############################################################################
+
+# @name getRLBatchPreDecision
+GET {{serviceUrl}}/RLTrainingBatches?$filter=Vendor_ID eq {{vendorId}}&$select=ID,PredictedAction,TrueAction,Reward,StateVector
+Accept: {{contentType}}
+
+###############################################################################
+#  STEP 3c — GET the AgentExtractionLog
+#
+#  Expected:
+#    MissingFields  : ""    (all fields extracted) OR comma-separated list
+#    EmailTriggered : false (if all fields extracted) OR true (follow-up sent)
+#    RawLLMOutput   : raw JSON from the LLM (or stub JSON in local dev)
+###############################################################################
+
+# @name getExtractionLog
+GET {{serviceUrl}}/AgentExtractionLogs?$filter=Vendor_ID eq {{vendorId}}&$select=ID,MissingFields,EmailTriggered,createdAt
+Accept: {{contentType}}
+
+###############################################################################
+#  STEP 4 — Submit Final Human Decision (triggers Phase 3 reward calculation)
+#
+#  Payload: trueAction must be one of:
+#    "Auto-Approve" | "Auto-Reject" | "Route-Compliance" | "Route-Finance" | "Route-Both"
+#
+#  What happens in human-review.js:
+#    1. Validate Vendor is in REVIEWABLE_STATUSES (Pending, Compliance-Review, Finance-Review)
+#    2. Fetch PredictedAction from RLTrainingBatch
+#    3. Compute reward: R = +1 if PredictedAction == trueAction, else -1
+#    4. Atomic cds.tx commit:
+#         a. RLTrainingBatch ← TrueAction="Route-Compliance", Reward=+1
+#         b. ApprovalReview  ← audit record with shadow-mode footnote
+#         c. Vendor.Status   ← "Compliance-Review"
+#
+#  To test the MISMATCH path (Reward = -1):
+#    Change trueAction to "Auto-Approve" (which differs from RL's "Route-Compliance")
+###############################################################################
+
+# @name submitDecision
+POST {{serviceUrl}}/submitFinalDecision
+Content-Type: {{contentType}}
+
+{
+    "vendorId"    : "{{vendorId}}",
+    "trueAction"  : "Route-Compliance",
+    "reviewerName": "Jane Smith",
+    "department"  : "Compliance",
+    "comments"    : "All KYC documents verified. Routing to compliance team for final sign-off."
+}
+
+###############################################################################
+#  STEP 5 — Verify the Reward was correctly calculated and stored
+#
+#  Expected (trueAction = "Route-Compliance", assuming RL predicted the same):
+#    TrueAction : "Route-Compliance"
+#    Reward     : 1    ← +1 indicates RL agent was correct (shadow match)
+#
+#  Expected (trueAction differs from PredictedAction):
+#    Reward     : -1   ← agent was wrong; contributes a correction gradient
+#                          to next weekend's SAC training run in app/train.py
+###############################################################################
+
+# @name verifyReward
+GET {{serviceUrl}}/RLTrainingBatches?$filter=Vendor_ID eq {{vendorId}}&$select=ID,PredictedAction,TrueAction,Reward
+Accept: {{contentType}}
+
+###############################################################################
+#  STEP 5b — GET the full updated Vendor record
+#
+#  Expected:
+#    Status    : "Compliance-Review" (or whatever ACTION_TO_STATUS maps trueAction to)
+#    RiskScore : populated by the AI pipeline composite risk formula
+###############################################################################
+
+# @name getVendorFinal
+GET {{serviceUrl}}/Vendors/{{vendorId}}?$expand=RLBatch,ExtractionLog,ApprovalReviews
+Accept: {{contentType}}
+
+###############################################################################
+#  STEP 5c — GET ApprovalReview audit record
+#  Verify the shadow-mode footnote was written to Comments
+###############################################################################
+
+# @name getApprovalReview
+GET {{serviceUrl}}/ApprovalReviews?$filter=Vendor_ID eq {{vendorId}}&$select=ID,Decision,Comments,ReviewerName,ReviewDate
+Accept: {{contentType}}
+
+###############################################################################
+#  BONUS — Check RL microservice health
+#  Confirm the Python FastAPI server is alive and weights are loaded.
+#  Expected: { "status": "healthy", "model_loaded": true, ... }
+###############################################################################
+
+# @name rlHealth
+GET http://localhost:8000/health
+Accept: application/json
+
+###############################################################################
+#  BONUS — Trigger RL routing manually (Phase 3 stub — returns placeholder text)
+#  Useful for testing the CAPM → Python HTTP bridge without a document upload.
+###############################################################################
+
+# @name triggerRLRouting
+POST {{serviceUrl}}/triggerRLRouting
+Content-Type: {{contentType}}
+
+{
+    "vendorId": "{{vendorId}}"
+}
+
+###############################################################################
+#  CLEANUP — Verify all vendors (list report check)
+#  Useful to confirm your test vendor appears correctly in the list.
+###############################################################################
+
+# @name listAllVendors
+GET {{serviceUrl}}/Vendors?$select=ID,CompanyName,Status,RiskScore&$expand=RLBatch($select=PredictedAction,Reward)&$orderby=createdAt desc&$top=10
+Accept: {{contentType}}
+
+###############################################################################
+#  END OF E2E TEST SUITE
+#  For automated CI/CD execution, use test/integration.test.js (Jest + nock).
+###############################################################################

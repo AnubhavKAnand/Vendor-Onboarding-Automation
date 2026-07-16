@@ -1,0 +1,20 @@
+VIEW VendorOnboardingService_Vendors AS SELECT
+  Vendor_0.ID,
+  Vendor_0.createdAt,
+  Vendor_0.createdBy,
+  Vendor_0.modifiedAt,
+  Vendor_0.modifiedBy,
+  Vendor_0.CompanyName,
+  Vendor_0.TaxID,
+  Vendor_0.Industry,
+  Vendor_0.Country,
+  Vendor_0.RiskScore,
+  Vendor_0.Status
+FROM vendorportal_Vendor AS Vendor_0
+WITH ASSOCIATIONS (
+  MANY TO MANY JOIN VendorOnboardingService_VendorDocuments AS Documents ON (Documents.Vendor_ID = ID),
+  MANY TO MANY JOIN VendorOnboardingService_BankAccounts AS BankAccounts ON (BankAccounts.Vendor_ID = ID),
+  MANY TO MANY JOIN VendorOnboardingService_ApprovalReviews AS ApprovalReviews ON (ApprovalReviews.Vendor_ID = ID),
+  MANY TO ONE JOIN VendorOnboardingService_AgentExtractionLogs AS ExtractionLog ON (ExtractionLog.Vendor_ID = ID),
+  MANY TO ONE JOIN VendorOnboardingService_RLTrainingBatches AS RLBatch ON (RLBatch.Vendor_ID = ID)
+)

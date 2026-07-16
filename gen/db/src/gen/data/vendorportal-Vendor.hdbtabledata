@@ -1,0 +1,37 @@
+{
+  "format_version": 1,
+  "imports": [
+    {
+      "target_table": "VENDORPORTAL_VENDOR",
+      "source_data": {
+        "data_type": "CSV",
+        "file_name": "vendorportal-Vendor.csv",
+        "has_header": true,
+        "type_config": {
+          "delimiter": ","
+        }
+      },
+      "import_settings": {
+        "import_columns": [
+          "ID",
+          "COMPANYNAME",
+          "TAXID",
+          "INDUSTRY",
+          "COUNTRY",
+          "RISKSCORE",
+          "STATUS"
+        ],
+        "include_filter": []
+      },
+      "column_mappings": {
+        "ID": "ID",
+        "COMPANYNAME": "CompanyName",
+        "TAXID": "TaxID",
+        "INDUSTRY": "Industry",
+        "COUNTRY": "Country",
+        "RISKSCORE": "RiskScore",
+        "STATUS": "Status"
+      }
+    }
+  ]
+}

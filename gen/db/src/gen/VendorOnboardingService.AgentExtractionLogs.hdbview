@@ -1,0 +1,14 @@
+VIEW VendorOnboardingService_AgentExtractionLogs AS SELECT
+  AgentExtractionLog_0.ID,
+  AgentExtractionLog_0.createdAt,
+  AgentExtractionLog_0.createdBy,
+  AgentExtractionLog_0.modifiedAt,
+  AgentExtractionLog_0.modifiedBy,
+  AgentExtractionLog_0.Vendor_ID,
+  AgentExtractionLog_0.RawLLMOutput,
+  AgentExtractionLog_0.MissingFields,
+  AgentExtractionLog_0.EmailTriggered
+FROM vendorportal_AgentExtractionLog AS AgentExtractionLog_0
+WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors AS Vendor ON (Vendor.ID = Vendor_ID)
+)

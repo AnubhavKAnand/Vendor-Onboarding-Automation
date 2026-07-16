@@ -1,0 +1,16 @@
+VIEW VendorOnboardingService_BankAccounts AS SELECT
+  BankAccount_0.ID,
+  BankAccount_0.createdAt,
+  BankAccount_0.createdBy,
+  BankAccount_0.modifiedAt,
+  BankAccount_0.modifiedBy,
+  BankAccount_0.Vendor_ID,
+  BankAccount_0.AccountName,
+  BankAccount_0.AccountNumber,
+  BankAccount_0.RoutingNumber,
+  BankAccount_0.SwiftCode,
+  BankAccount_0.IsVerified
+FROM vendorportal_BankAccount AS BankAccount_0
+WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors AS Vendor ON (Vendor.ID = Vendor_ID)
+)

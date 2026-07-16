@@ -1,0 +1,16 @@
+VIEW VendorOnboardingService_ApprovalReviews AS SELECT
+  ApprovalReview_0.ID,
+  ApprovalReview_0.createdAt,
+  ApprovalReview_0.createdBy,
+  ApprovalReview_0.modifiedAt,
+  ApprovalReview_0.modifiedBy,
+  ApprovalReview_0.Vendor_ID,
+  ApprovalReview_0.ReviewerName,
+  ApprovalReview_0.Department,
+  ApprovalReview_0.Decision,
+  ApprovalReview_0.Comments,
+  ApprovalReview_0.ReviewDate
+FROM vendorportal_ApprovalReview AS ApprovalReview_0
+WITH ASSOCIATIONS (
+  MANY TO ONE JOIN VendorOnboardingService_Vendors AS Vendor ON (Vendor.ID = Vendor_ID)
+)
